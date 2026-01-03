@@ -1,9 +1,26 @@
-
 //-----------------------------------------------------------------------------
 // secp256k1_inv_mod.v
-// Modular inversion for secp256k1: r = a^(-1) mod p
-// Uses Binary Extended Euclidean Algorithm
-// p = 2^256 - 2^32 - 977
+// Modular inversion for secp256k1 elliptic curve
+//
+// Description:
+//   Computes r = a^(-1) mod p where:
+//   - a is a 256-bit unsigned integer (non-zero)
+//   - p = 2^256 - 2^32 - 977 (secp256k1 prime)
+//
+// Algorithm: Binary Extended Euclidean Algorithm (BEEA)
+//   Uses the property: if gcd(a, p) = 1, then a*x ≡ 1 (mod p)
+//
+//   While u ≠ 1 and v ≠ 1:
+//     1. While u is even: u = u/2; x1 = (x1+p)/2 if x1 odd, else x1/2
+//     2. While v is even: v = v/2; x2 = (x2+p)/2 if x2 odd, else x2/2
+//     3. If u > v: u = u-v; x1 = x1-x2 (mod p)
+//        Else: v = v-u; x2 = x2-x1 (mod p)
+//
+// Latency: ~768 clock cycles (worst case)
+// Throughput: Variable, depends on input
+// Note: This is the most expensive operation - used only for Jacobian→Affine
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 module secp256k1_inv_mod (

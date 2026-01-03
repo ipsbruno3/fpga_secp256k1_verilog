@@ -1,8 +1,22 @@
-
 //-----------------------------------------------------------------------------
 // secp256k1_sub_mod.v
-// Modular subtraction for secp256k1: r = (a - b) mod p
-// p = 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F
+// Modular subtraction for secp256k1 elliptic curve
+//
+// Description:
+//   Computes r = (a - b) mod p where:
+//   - a, b are 256-bit unsigned integers
+//   - p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+//   - p = 2^256 - 2^32 - 977 (secp256k1 prime)
+//
+// Algorithm:
+//   1. Compute diff = a - b (257 bits to detect borrow)
+//   2. If borrow occurred (diff[256]=1), add p to result
+//   3. Otherwise return diff[255:0]
+//
+// Latency: 3 clock cycles
+// Throughput: 1 result per 3 cycles
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 module secp256k1_sub_mod (

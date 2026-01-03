@@ -1,7 +1,31 @@
-# gen_secp256k1_wnaf_table.py
-# Gera tabela wNAF (odd multiples) para secp256k1: (2*i+1)G
-# W=10 => 512 pontos (1G..1023G)
+#!/usr/bin/env python3
+"""
+secp256k1 wNAF Precomputation Table Generator
+=============================================
 
+Generates the lookup table of odd multiples of G for wNAF scalar multiplication.
+The table contains points: G, 3G, 5G, 7G, ..., (2^W - 1)G
+
+Configuration:
+    W = Window size (bits)
+    Number of points = 2^(W-1)
+
+Examples:
+    W = 4  ->   8 points (1G, 3G, ..., 15G)
+    W = 8  -> 128 points (1G, 3G, ..., 255G)
+    W = 10 -> 512 points (1G, 3G, ..., 1023G)
+    W = 11 -> 1024 points (1G, 3G, ..., 2047G)
+
+Output:
+    Verilog localparam declarations for precomp_x and precomp_y arrays
+
+Usage:
+    python gen_secp256k1_wnaf_table.py > nafs/secp256k1_precomp_wN.sv
+
+Author: Bruno Silva (bsbruno@proton.me)
+"""
+
+# secp256k1 curve parameters
 P  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
 GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
 GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8

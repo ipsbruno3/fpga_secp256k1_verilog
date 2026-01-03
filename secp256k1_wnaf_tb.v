@@ -1,6 +1,22 @@
 //-----------------------------------------------------------------------------
 // secp256k1_wnaf_tb.v
 // Testbench for secp256k1 wNAF scalar point multiplication
+//
+// Description:
+//   Comprehensive testbench for verifying the secp256k1_point_mul_wnaf module
+//   Tests various scalar values including edge cases:
+//   - k = 1 (generator point)
+//   - k = 2, 3, 7, 8 (small scalars)
+//   - k = 0 (point at infinity)
+//   - k = 255 (full window test)
+//   - Large 256-bit scalar
+//
+// Usage:
+//   iverilog -o sim.vvp secp256k1_wnaf_tb.v [all other .v files]
+//   vvp sim.vvp
+//   gtkwave secp256k1_wnaf_tb.vcd
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
