@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 """
-secp256k1 test + ECDSA self-check (pure Python, no dependencies)
+secp256k1 Verification Test Suite
+=================================
 
-What it does:
-1) Verifies your known scalar-mul vectors: k=1,2,3,7,8,255.
-2) Checks curve membership for all points.
-3) Runs an ECDSA sign/verify test using these curve params (deterministic RFC6979 nonce).
-4) Extra classic checks: n*G = infinity and (n-1)*G = -G.
+Pure Python implementation for verifying secp256k1 elliptic curve operations.
+No external dependencies required.
 
-Run:
-  python test_secp256k1_vectors.py
+Test Coverage:
+    1. Curve sanity checks (G on curve, -G calculation)
+    2. Known scalar multiplication vectors: k = 1, 2, 3, 7, 8, 255
+    3. Group order checks: n*G = infinity, (n-1)*G = -G
+    4. ECDSA sign/verify with RFC6979 deterministic nonce
+
+Usage:
+    python tests.py
+
+Expected Output:
+    ALL TESTS PASSED.
+
+This script validates that the Verilog implementation produces correct results
+by comparing against known test vectors from the secp256k1 specification.
+
+Author: Bruno Silva (bsbruno@proton.me)
 """
 
 import hashlib

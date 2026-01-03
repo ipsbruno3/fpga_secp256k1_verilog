@@ -1,8 +1,21 @@
-
 //-----------------------------------------------------------------------------
 // secp256k1_add_mod.v
-// Modular addition for secp256k1: r = (a + b) mod p
-// p = 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F
+// Modular addition for secp256k1 elliptic curve
+//
+// Description:
+//   Computes r = (a + b) mod p where:
+//   - a, b are 256-bit unsigned integers
+//   - p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+//   - p = 2^256 - 2^32 - 977 (secp256k1 prime)
+//
+// Algorithm:
+//   1. Compute sum = a + b (257 bits to capture carry)
+//   2. If sum >= p, subtract p; otherwise return sum
+//
+// Latency: 3 clock cycles
+// Throughput: 1 result per 3 cycles
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 module secp256k1_add_mod (

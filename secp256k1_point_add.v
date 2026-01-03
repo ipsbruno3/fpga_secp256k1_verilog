@@ -1,18 +1,28 @@
-
 //-----------------------------------------------------------------------------
 // secp256k1_point_add.v
-// Point addition in Jacobian coordinates for secp256k1
-// Input:  P1 = (X1, Y1, Z1) in Jacobian, P2 = (X2, Y2, 1) in affine
-// Output: P3 = P1 + P2 = (X3, Y3, Z3) in Jacobian
+// Elliptic curve point addition for secp256k1
 //
-// Mixed addition (Z2 = 1) formulas:
-//   U2 = X2 * Z1²
-//   S2 = Y2 * Z1³
-//   H = U2 - X1
-//   R = S2 - Y1
-//   X3 = R² - H³ - 2*X1*H²
-//   Y3 = R*(X1*H² - X3) - Y1*H³
-//   Z3 = Z1 * H
+// Description:
+//   Computes P3 = P1 + P2 using mixed Jacobian-Affine coordinates
+//   - Input P1: (X1, Y1, Z1) in Jacobian coordinates
+//   - Input P2: (X2, Y2, 1) in Affine coordinates (Z2 = 1)
+//   - Output P3: (X3, Y3, Z3) in Jacobian coordinates
+//
+// Mixed Addition Formulas (Z2 = 1 optimization):
+//   U2 = X2 * Z1²           - Convert P2.x to Jacobian space
+//   S2 = Y2 * Z1³           - Convert P2.y to Jacobian space
+//   H  = U2 - X1            - Difference in X coordinates
+//   R  = S2 - Y1            - Difference in Y coordinates
+//   X3 = R² - H³ - 2*X1*H²  - New X coordinate
+//   Y3 = R*(X1*H² - X3) - Y1*H³  - New Y coordinate
+//   Z3 = Z1 * H             - New Z coordinate
+//
+// Latency: ~19 states × multiplier_latency ≈ 130+ cycles
+// Operations: 12 multiplications, 7 additions/subtractions
+//
+// Note: This module assumes P1 ≠ P2 (use point_double for P1 = P2)
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 module secp256k1_point_add (

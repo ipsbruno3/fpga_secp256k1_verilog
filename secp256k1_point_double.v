@@ -1,16 +1,28 @@
-
 //-----------------------------------------------------------------------------
 // secp256k1_point_double.v
-// Point doubling in Jacobian coordinates for secp256k1 (a=0)
-// Input:  P = (X1, Y1, Z1) in Jacobian coordinates
-// Output: 2P = (X3, Y3, Z3) in Jacobian coordinates
+// Elliptic curve point doubling for secp256k1 (curve parameter a = 0)
 //
-// For secp256k1 (a=0):
-//   S = 4*X*Y²
-//   M = 3*X²
-//   X3 = M² - 2*S
-//   Y3 = M*(S - X3) - 8*Y⁴
-//   Z3 = 2*Y*Z
+// Description:
+//   Computes 2P (point doubling) in Jacobian coordinates
+//   - Input P: (X1, Y1, Z1) in Jacobian coordinates
+//   - Output 2P: (X3, Y3, Z3) in Jacobian coordinates
+//
+// secp256k1-Optimized Formulas (a = 0):
+//   S  = 4*X*Y²           - Intermediate value
+//   M  = 3*X²             - Slope (simplified since a=0)
+//   X3 = M² - 2*S         - New X coordinate
+//   Y3 = M*(S - X3) - 8*Y⁴  - New Y coordinate
+//   Z3 = 2*Y*Z            - New Z coordinate
+//
+// Optimization Note:
+//   Generic curves have M = 3*X² + a*Z⁴
+//   secp256k1 has a = 0, eliminating the a*Z⁴ term
+//   This saves 2 multiplications per doubling operation
+//
+// Latency: ~21 states × operation_latency ≈ 150+ cycles
+// Operations: 8 multiplications, 8 additions
+//
+// Author: Bruno Silva (bsbruno@proton.me)
 //-----------------------------------------------------------------------------
 
 module secp256k1_point_double (
