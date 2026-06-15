@@ -139,18 +139,17 @@ module secp256k1_alu (
                 //----------------------------------------------------------
                 // ADD/SUB: Process 32 bits per cycle
                 //----------------------------------------------------------
-                ADDSUB_WORD: begin
-                    alu_a <= a_reg[i_idx[2:0]];
-                    alu_b <= b_reg[i_idx[2:0]];
+                ADDSUB_WORD: begin : addsub_word_blk
+                    // Use a blocking temp so the freshly computed word/carry are
+                    // are consumed on THIS cycle
+                    reg [32:0] s;
+                    if (curr_op == OP_ADD)
+                        s = {1'b0, a_reg[i_idx[2:0]]} + {1'b0, b_reg[i_idx[2:0]]} + {32'd0, carry_borrow};
+                    else
+                        s = {1'b0, a_reg[i_idx[2:0]]} - {1'b0, b_reg[i_idx[2:0]]} - {32'd0, carry_borrow};
 
-                    if (curr_op == OP_ADD) begin
-                        add_out <= {1'b0, a_reg[i_idx[2:0]]} + {1'b0, b_reg[i_idx[2:0]]} + {32'd0, carry_borrow};
-                    end else begin
-                        add_out <= {1'b0, a_reg[i_idx[2:0]]} - {1'b0, b_reg[i_idx[2:0]]} - {32'd0, carry_borrow};
-                    end
-
-                    r_reg[i_idx[2:0]] <= add_out[31:0];
-                    carry_borrow <= add_out[32];
+                    r_reg[i_idx[2:0]] <= s[31:0];
+                    carry_borrow <= s[32];
 
                     if (i_idx == 4'd7) begin
                         state <= ADDSUB_CHECK;
@@ -197,16 +196,16 @@ module secp256k1_alu (
                     end
                 end
 
-                ADDSUB_NORM: begin
+                ADDSUB_NORM: begin : addsub_norm_blk
                     // Normalize by add/sub p
-                    if (curr_op == OP_ADD) begin
-                        add_out <= {1'b0, a_reg[i_idx[2:0]]} + {1'b0, b_reg[i_idx[2:0]]} + {32'd0, carry_borrow};
-                    end else begin
-                        add_out <= {1'b0, a_reg[i_idx[2:0]]} - {1'b0, b_reg[i_idx[2:0]]} - {32'd0, carry_borrow};
-                    end
+                    reg [32:0] s;
+                    if (curr_op == OP_ADD)
+                        s = {1'b0, a_reg[i_idx[2:0]]} + {1'b0, b_reg[i_idx[2:0]]} + {32'd0, carry_borrow};
+                    else
+                        s = {1'b0, a_reg[i_idx[2:0]]} - {1'b0, b_reg[i_idx[2:0]]} - {32'd0, carry_borrow};
 
-                    r_reg[i_idx[2:0]] <= add_out[31:0];
-                    carry_borrow <= add_out[32];
+                    r_reg[i_idx[2:0]] <= s[31:0];
+                    carry_borrow <= s[32];
 
                     if (i_idx == 4'd7) begin
                         state <= DONE_STATE;
