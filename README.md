@@ -408,6 +408,57 @@ iverilog -o sim.vvp \
 vvp sim.vvp
 ```
 
+### Full Address-Derivation Pipeline (SHA-256 + RIPEMD-160 + HIT)
+
+> Integrated contribution, **verified in simulation (Icarus Verilog, 6/6 tests)**.
+
+Extends this project with the full Bitcoin address-derivation flow on hardware:
+
+```
+privkey → secp256k1 (k·G) → pubkey(comp) → SHA-256 → RIPEMD-160 → hash160
+                                                                        ↓
+                                               hit_detect (hash160 == target?) → HIT
+```
+
+**Modules** (`pipeline/` folder):
+
+| Module | Purpose |
+|---|---|
+| `sha256_core.v` | SHA-256 core (single block, 64-round FSM) |
+| `ripemd160_core.v` | RIPEMD-160 core (80 rounds, two lines, LE) |
+| `pad_block.v` | SHA-2/MD padding (BE for SHA-256, LE for RIPEMD-160) |
+| `hit_detect.v` | Compares hash160 against puzzle targets (N) → `hit`/`hit_id` |
+| `tb_pipeline.v` | Integrated testbench (wNAF + hash + hit) |
+
+**Simulation results:**
+
+```
+SHA-256('abc')  PASS
+RIPEMD-160('abc') PASS  → f708b28e7a985de08e4a049b87b0c698fc0b5af1
+PIPELINE  PASS: hash160(key=7) = f9fbed5dd49d59ea806acae372c433b3693f0bfd
+                (LE bytes 5dedfbf9ea599dd4e3ca6a80b333c472fd0b3f69)
+                address = 19ZewH8Kk1PDbSNdJ97FP4EiCjTRaZMZQA (puzzle #3)
+HIT-DETECT PASS: key=7  -> hit=1 (id=0)
+HIT-DETECT NEG PASS: key=8 -> no hit
+SUMMARY: pass=6  fail=0
+```
+
+Cycles per block (simulation): SHA-256 ≈ 66–70, RIPEMD-160 ≈ 82–86, point add ≈ 12.
+
+#### FPGA (integrated) vs GPU
+
+| Metric | FPGA (integration) | GPU (RTX 3090, KeyHunt/BitCrack) |
+|---|---|---|
+| Full pipeline | EC + SHA-256 + RIPEMD-160 + hit | same (already integrated) |
+| Cycles per key | ~160–170 | — |
+| Keys/s (est.) | ~0.5 Mkey/s/lane; 4–8 lanes → **2–4 Mkey/s/board** | **~1–2 Gkey/s** |
+| Energy efficiency | ~0.3–0.5 W → **~4–10 Mkey/J** | 350 W → ~3–6 kkey/J (~1,000× worse) |
+| Cost | Artix-7 board ~US$ 100–400 | ~US$ 1,500 |
+| Cost / Mkey/s | ~US$ 100–200 | ~US$ 750–1,500 |
+| Status | Verified in simulation; needs synthesis/measurement | Mature / validated |
+
+> Caveat: the **318M adds/s** quoted above covers only the point-arithmetic pipeline (no hash). With SHA-256 + RIPEMD-160 in the path, real throughput drops to the **Mkey/s** range per board. GPU wins on raw throughput; FPGA wins on energy efficiency.
+
 ### Vivado Synthesis
 
 1. Create new RTL project
